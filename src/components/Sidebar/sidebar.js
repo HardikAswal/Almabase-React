@@ -152,8 +152,11 @@ export default class Sidebar extends React.Component {
 
       let list = this.state.elements;
       let idx = list.indexOf(element);
-      list = list.splice(idx, 1);
+      console.log("1: ", idx, list);
+      list.splice(idx, 1);
+      console.log("2: ", idx, list);
       list.push(Y);
+      console.log("3: ", idx, list);
 
       localStorage.setItem("elements", JSON.stringify(list));
 
@@ -161,6 +164,7 @@ export default class Sidebar extends React.Component {
         ...this.state,
         elements: list,
         isBeingDragged: false,
+        num: this.state.num + 1,
       });
 
       return;
@@ -175,13 +179,8 @@ export default class Sidebar extends React.Component {
       type: type,
       displayFilterModal: !this.state.displayFilterModal,
       selected: type,
+      num: this.state.num + 1,
     });
-
-    setTimeout(() => {
-      console.log(this.state);
-    }, 10000);
-    // this.setState({displayFilterModal: true});
-    // this.handleDisplayFilterModal();
   };
 
   handleDisplayFilterModal = () => {
@@ -217,6 +216,21 @@ export default class Sidebar extends React.Component {
     });
   };
 
+  elementModify = (e) => {
+    console.log("Yahan tak working");
+    if (this.state.currentlySelectedElement === null) return;
+    console.log(e.keyCode);
+    if (e.keyCode === 13) {
+      this.setState({ displayFilterModal: true });
+    } else if (e.keyCode === 46) {
+      let list = this.state.elements;
+      let idx = list.indexOf(this.state.currentlySelectedElement);
+      console.log(idx, list);
+      list.splice(idx, 1);
+      this.setState({ elements: list });
+    }
+  };
+
   render() {
     // if (localStorage.getItem("elements")) {
     //   this.setState({
@@ -224,7 +238,11 @@ export default class Sidebar extends React.Component {
     //   });
     // }
     return (
-      <div className="wrapper">
+      <div
+        className="wrapper"
+        onKeyDown={(e) => this.elementModify(e)}
+        tabIndex="0"
+      >
         {this.state.displayFilterModal ? (
           <div className="filter-modal">
             <Modal
@@ -292,9 +310,9 @@ export default class Sidebar extends React.Component {
                     });
                   }}
                   // onDragStart={e => this.setState({ isBeingDragged: true })}
-                  onDragEnd={(e) => {
-                    this.changePosition(e, element);
-                  }}
+                  // onDragEnd={(e) => {
+                  //   this.changePosition(e, element);
+                  // }}
                 >
                   {element.innerText}
                 </label>
@@ -308,6 +326,7 @@ export default class Sidebar extends React.Component {
                   id="Input"
                   style={style}
                   value={element.value}
+                  onChange={(e) => element.value === e.target.value}
                   onClick={(e) => {
                     this.setState({
                       currentlySelectedElement:
@@ -328,9 +347,9 @@ export default class Sidebar extends React.Component {
                     });
                   }}
                   // onDragStart={e => this.setState({ isBeingDragged: true })}
-                  onDragEnd={(e) => {
-                    this.changePosition(e, element);
-                  }}
+                  // onDragEnd={(e) => {
+                  //   this.changePosition(e, element);
+                  // }}
                 />
               );
             } else if (element.localName === "button") {
@@ -360,9 +379,9 @@ export default class Sidebar extends React.Component {
                     });
                   }}
                   // onDragStart={e => this.setState({ isBeingDragged: true })}
-                  onDragEnd={(e) => {
-                    this.changePosition(e, element);
-                  }}
+                  // onDragEnd={(e) => {
+                  //   this.changePosition(e, element);
+                  // }}
                 >
                   {element.innerText}
                 </button>

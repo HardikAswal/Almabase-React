@@ -1,3 +1,11 @@
+.wrapper {
+  outline: none;
+}
+
+.wrapper:focus {
+  outline: none;
+}
+
 .sidebar-wrapper {
   float: right;
   height: 100vh;

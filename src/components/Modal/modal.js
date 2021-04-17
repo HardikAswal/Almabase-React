@@ -99,6 +99,7 @@ class Modal extends React.Component {
         >
           Save Changes
         </button>
+        <button onClick={() => this.props.displayFilterModal()}>Cancel </button>
       </div>
     );
   }
