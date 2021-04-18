@@ -19,8 +19,8 @@ export default class Sidebar extends React.Component {
       elements: [],
       isBeingDragged: false,
       toBeDeleted: null,
-      passFontSize: 12,
-      passFontWeight: 100,
+      passFontSize: 12, //Kept as default
+      passFontWeight: 100, //Kept as default
     };
   }
 
