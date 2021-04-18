@@ -18,8 +18,16 @@ export default class Sidebar extends React.Component {
       currentElementText: "",
       elements: [],
       isBeingDragged: false,
+      toBeDeleted: null,
+      passFontSize: 12,
+      passFontWeight: 100,
     };
   }
+
+  // componentDidMount = () => {
+  //   document.getElementById("dropzone").innerHTML =
+  //     localStorage.getItem("Screen") || null;
+  // };
 
   getValuesFromModal = (data) => {
     const { text, x, y, fontSize, fontWeight } = data;
@@ -30,6 +38,17 @@ export default class Sidebar extends React.Component {
 
     var parent = document.getElementById("dropzone");
     // var node = document.createTextNode("Hello world");
+
+    if (this.state.toBeDeleted !== null) {
+      let list = this.state.elements;
+      let idx = list.indexOf(this.state.toBeDeleted);
+      list.splice(idx, 1);
+      this.setState({
+        elements: list,
+        toBeDeleted: null,
+        currentlySelectedElement: null,
+      });
+    }
 
     var Y;
     if (type === "Label") {
@@ -50,18 +69,7 @@ export default class Sidebar extends React.Component {
       ...this.state,
       num: this.state.num + 1,
     });
-    // var YV = prompt("Enter Caption value:", "");
-    // Y.style.cssText = `
-    //     position:absolute;
-    //     top:${y}px;
-    //     left:${x}px;
-    //     width:fit-content;
-    //     height:fit-content;
-    //     font-size: ${fontSize}px;
-    //     font-weight: ${fontWeight};
-    //     -moz-border-radius:100px;
-    //     -moz-box-shadow: 0px 0px 8px #fff;
-    //     `;
+
     Y.style.position = "absolute";
     Y.style.top = `${y}px`;
     Y.style.left = `${x}px`;
@@ -73,7 +81,6 @@ export default class Sidebar extends React.Component {
     let e = this.state.elements;
     e.push(Y);
     console.log("before pushing: ", e);
-    localStorage.setItem("elements", JSON.stringify(e));
     this.setState({
       elements: e,
     });
@@ -89,6 +96,10 @@ export default class Sidebar extends React.Component {
     var cY = e.clientY;
     var sY = e.screenY;
     console.log("Drag Enter: ", cX, sX, cY, sY);
+    this.setState({
+      currentElementText: "",
+      currentlySelectedElement: null,
+    });
   };
 
   handleDragLeave = (e) => {
@@ -150,6 +161,14 @@ export default class Sidebar extends React.Component {
       Y.style.fontSize = `${element.style.fontSize}`;
       Y.style.fontWeight = element.style.fontWeight;
 
+      console.log(
+        "New positions: ",
+        Y.style.top,
+        Y.style.left,
+        element.style.fontSize,
+        element.style.fontWeight
+      );
+
       let list = this.state.elements;
       let idx = list.indexOf(element);
       console.log("1: ", idx, list);
@@ -165,6 +184,11 @@ export default class Sidebar extends React.Component {
         elements: list,
         isBeingDragged: false,
         num: this.state.num + 1,
+        currentlySelectedElement: Y,
+        cY,
+        cX,
+        passFontSize: parseInt(element.style.fontSize.split("p")[0]),
+        passFontWeight: parseInt(element.style.fontWeight.split("p")[0]),
       });
 
       return;
@@ -217,17 +241,24 @@ export default class Sidebar extends React.Component {
   };
 
   elementModify = (e) => {
-    console.log("Yahan tak working");
     if (this.state.currentlySelectedElement === null) return;
     console.log(e.keyCode);
     if (e.keyCode === 13) {
-      this.setState({ displayFilterModal: true });
+      this.setState({
+        ...this.state,
+        displayFilterModal: true,
+        toBeDeleted: this.state.currentlySelectedElement,
+      });
     } else if (e.keyCode === 46) {
       let list = this.state.elements;
       let idx = list.indexOf(this.state.currentlySelectedElement);
       console.log(idx, list);
       list.splice(idx, 1);
-      this.setState({ elements: list });
+      this.setState({
+        ...this.state,
+        elements: list,
+        currentlySelectedElement: null,
+      });
     }
   };
 
@@ -252,6 +283,8 @@ export default class Sidebar extends React.Component {
               y={this.state.cY}
               selected={this.state.selected}
               currentElementText={this.state.currentElementText}
+              fontSize={this.state.passFontSize}
+              fontWeight={this.state.passFontWeight}
             />
           </div>
         ) : null}
@@ -291,16 +324,30 @@ export default class Sidebar extends React.Component {
                   draggable="true"
                   style={style}
                   onClick={(e) => {
-                    this.setState({
-                      currentlySelectedElement:
-                        this.state.currentlySelectedElement === element
-                          ? null
-                          : element,
-                      currentElementText: element.innerText,
-                      cY: element.style.top.slice(0, 3),
-                      cX: element.style.left.slice(0, 3),
-                      // displayFilterModal: !this.state.displayFilterModal
-                    });
+                    console.log(
+                      "Passing these: ",
+                      element.style.top,
+                      element.style.left,
+                      this.state
+                    );
+                    this.setState(
+                      {
+                        currentlySelectedElement:
+                          this.state.currentlySelectedElement === element
+                            ? null
+                            : element,
+                        currentElementText: element.innerText,
+                        cY: parseInt(element.style.top.split("p")[0]),
+                        cX: parseInt(element.style.left.split("p")[0]),
+                        passFontSize: parseInt(
+                          element.style.fontSize.split("p")[0]
+                        ),
+                        passFontWeight: parseInt(
+                          element.style.fontWeight.split("p")[0]
+                        ),
+                      },
+                      () => console.log(this.state)
+                    );
                   }}
                   onDragStart={(e) => {
                     e.dataTransfer.setData("Type", e.target.id);
@@ -309,15 +356,13 @@ export default class Sidebar extends React.Component {
                       currentlySelectedElement: element,
                     });
                   }}
-                  // onDragStart={e => this.setState({ isBeingDragged: true })}
-                  // onDragEnd={(e) => {
-                  //   this.changePosition(e, element);
-                  // }}
                 >
                   {element.innerText}
                 </label>
               );
             } else if (element.localName === "input") {
+              let val = element.value;
+
               return (
                 <input
                   key={index}
@@ -325,8 +370,9 @@ export default class Sidebar extends React.Component {
                   type="text"
                   id="Input"
                   style={style}
-                  value={element.value}
-                  onChange={(e) => element.value === e.target.value}
+                  value={val}
+                  onChange={(e) => val === e.target.value}
+                  autoComplete="off"
                   onClick={(e) => {
                     this.setState({
                       currentlySelectedElement:
@@ -334,9 +380,14 @@ export default class Sidebar extends React.Component {
                           ? null
                           : element,
                       currentElementText: element.value,
-                      cY: element.style.top.slice(0, 3),
-                      cX: element.style.left.slice(0, 3),
-                      // displayFilterModal: !this.state.displayFilterModal
+                      cY: parseInt(element.style.top.split("p")[0]),
+                      cX: parseInt(element.style.left.split("p")[0]),
+                      passFontSize: parseInt(
+                        element.style.fontSize.split("p")[0]
+                      ),
+                      passFontWeight: parseInt(
+                        element.style.fontWeight.split("p")[0]
+                      ),
                     });
                   }}
                   onDragStart={(e) => {
@@ -346,10 +397,6 @@ export default class Sidebar extends React.Component {
                       currentlySelectedElement: element,
                     });
                   }}
-                  // onDragStart={e => this.setState({ isBeingDragged: true })}
-                  // onDragEnd={(e) => {
-                  //   this.changePosition(e, element);
-                  // }}
                 />
               );
             } else if (element.localName === "button") {
@@ -366,9 +413,14 @@ export default class Sidebar extends React.Component {
                           ? null
                           : element,
                       currentElementText: element.value,
-                      cY: element.style.top.slice(0, 3),
-                      cX: element.style.left.slice(0, 3),
-                      // displayFilterModal: !this.state.displayFilterModal
+                      cY: parseInt(element.style.top.split("p")[0]),
+                      cX: parseInt(element.style.left.split("p")[0]),
+                      passFontSize: parseInt(
+                        element.style.fontSize.split("p")[0]
+                      ),
+                      passFontWeight: parseInt(
+                        element.style.fontWeight.split("p")[0]
+                      ),
                     });
                   }}
                   onDragStart={(e) => {
@@ -378,10 +430,6 @@ export default class Sidebar extends React.Component {
                       currentlySelectedElement: element,
                     });
                   }}
-                  // onDragStart={e => this.setState({ isBeingDragged: true })}
-                  // onDragEnd={(e) => {
-                  //   this.changePosition(e, element);
-                  // }}
                 >
                   {element.innerText}
                 </button>
@@ -389,6 +437,7 @@ export default class Sidebar extends React.Component {
             }
           })}
         </div>
+
         <div className="sidebar-wrapper">
           <div className="sidebar-heading">Blocks</div>
 

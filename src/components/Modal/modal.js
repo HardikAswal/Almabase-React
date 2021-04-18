@@ -13,7 +13,15 @@ class Modal extends React.Component {
   }
 
   componentDidMount() {
-    const { x, y, selected, currentElementText } = this.props;
+    const {
+      x,
+      y,
+      selected,
+      currentElementText,
+      fontSize,
+      fontWeight,
+    } = this.props;
+    console.log(x, y, selected, currentElementText, fontSize, fontWeight);
     let text = !currentElementText
       ? `This is a ${selected}`
       : currentElementText;
@@ -22,6 +30,8 @@ class Modal extends React.Component {
       x,
       y,
       text,
+      fontSize,
+      fontWeight,
     });
   }
 
